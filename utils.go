@@ -117,3 +117,19 @@ func handleStruct(ctx context.Context, value reflect.Value, opts *valueOptions) 
 
 	return nil
 }
+
+func handleString(ctx context.Context, value reflect.Value, opts *valueOptions) error {
+	var exe *executionBuffer
+	var err error
+	if exe, err = getExecutionBuffer(ctx); err != nil {
+		fmt.Println("can't get execution buffer")
+		return err
+	}
+
+	exe.Add(func() error {
+		fmt.Println("add that string", value.Type().Name(), value.Interface())
+		return nil
+	})
+
+	return nil
+}

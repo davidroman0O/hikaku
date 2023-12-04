@@ -6,6 +6,12 @@ import (
 	"reflect"
 )
 
+/// TODO: i need a way to store the mapping and the composite mapping of the structs
+/// TODO: define a way to represent the tree of data
+/// it has to be generic enough to fit other languages aka be universal (i.e. Block, Property, etc)
+/// TODO: make more todos for each type of data that need to be processed
+/// TODO: add good logging (should I upgrade my `go`? could use the latest standard package for that)
+
 // Analyze type deeply to blocks
 func AnalyzeType[T any]() {
 
@@ -88,9 +94,7 @@ func switchValue(ctx context.Context, value reflect.Value, opts ...optsValueOpti
 	switch value.Kind() {
 	// we need to loop through all structfields
 	case reflect.Struct:
-		if err := handleStruct(ctx, value, valueOpts); err != nil {
-			return err
-		}
+		return handleStruct(ctx, value, valueOpts)
 	case reflect.Slice:
 	case reflect.Array:
 		break
@@ -121,7 +125,7 @@ func switchValue(ctx context.Context, value reflect.Value, opts ...optsValueOpti
 	case reflect.Complex128:
 		break
 	case reflect.String:
-		break
+		return handleString(ctx, value, valueOpts)
 	case reflect.Uintptr:
 		break
 	case reflect.Interface:
