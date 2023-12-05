@@ -48,6 +48,7 @@ func getNameField(field reflect.StructField, cfg config) (string, error) {
 
 var keyExecutionBufferCtx string = "buffer"
 var keyDiffCtx string = "differences"
+var keyAttributeMapCtx string = "mapPathPerProperty"
 
 func has[T any](ctx context.Context, key string) bool {
 	data := ctx.Value(key)
@@ -77,6 +78,12 @@ func checkInitContext(ctx context.Context) context.Context {
 	if !has[executionBuffer](ctx, keyExecutionBufferCtx) {
 		ctx = set[executionBuffer](ctx, keyExecutionBufferCtx, newExecutionBuffer())
 	}
+	if !has[executionBuffer](ctx, keyExecutionBufferCtx) {
+		ctx = set[executionBuffer](ctx, keyExecutionBufferCtx, newExecutionBuffer())
+	}
+	if !has[AttributeMap](ctx, keyAttributeMapCtx) {
+		ctx = set[AttributeMap](ctx, keyAttributeMapCtx, newAttributeMap())
+	}
 	return ctx
 }
 
@@ -88,27 +95,49 @@ func setExecutionBuffer(ctx context.Context, exe *executionBuffer) context.Conte
 	return set[executionBuffer](ctx, keyExecutionBufferCtx, exe)
 }
 
+func getAttributeMap(ctx context.Context) (*AttributeMap, error) {
+	return get[AttributeMap](ctx, keyAttributeMapCtx)
+}
+
+func setAttributeMap(ctx context.Context, exe *AttributeMap) context.Context {
+	return set[AttributeMap](ctx, keyAttributeMapCtx, exe)
+}
+
 // Receive a value of kind struct
 func handleStruct(ctx context.Context, value reflect.Value, opts *valueOptions) error {
 	var exe *executionBuffer
+	var attrs *AttributeMap
+
 	var err error
 	if exe, err = getExecutionBuffer(ctx); err != nil {
 		fmt.Println("can't get execution buffer")
 		return err
 	}
 
+	if attrs, err = getAttributeMap(ctx); err != nil {
+		fmt.Println("can't get attrs map")
+		return err
+	}
+
+	thisStruct := attrs.Add(opts.parent, value)
+
 	for idx := 0; idx < value.NumField(); idx++ {
 
 		fieldValue := value.Field(idx)
-		// varName := valueVal.Type().Field(idx).Name
-		// varType := valueVal.Type().Field(idx).Type.Kind()
-		// varValue := valueVal.Field(idx).Interface()
+
 		// if varType != reflect.Slice && varType != reflect.Struct {
 		// 	// valueCompose[varName] = varValue
 		// }
+
+		varName := value.Type().Field(idx).Name
+		varType := value.Type().Field(idx).Type.Kind()
+		varValue := value.Field(idx).Interface()
 		fmt.Println("properties")
+
 		exe.Add(func() error {
-			return switchValue(ctx, fieldValue)
+			fmt.Println(varName, varType, varValue)
+			// return switchValue(ctx, fieldValue, fromParent(fmt.Sprintf("%v.%v.%v", opts.path, value.Type().Name(), varName)))
+			return switchValue(ctx, fieldValue, fromParent(thisStruct.Path))
 		})
 		// hashStructNames[varName] = strings.Split(valueVal.Type().Field(idx).Tag.Get("json"), ",")[0]
 	}
@@ -130,6 +159,11 @@ func handleString(ctx context.Context, value reflect.Value, opts *valueOptions) 
 		fmt.Println("add that string", value.Type().Name(), value.Interface())
 		return nil
 	})
+
+	return nil
+}
+
+func handleArray(ctx context.Context, value reflect.Value, opts *valueOptions) error {
 
 	return nil
 }

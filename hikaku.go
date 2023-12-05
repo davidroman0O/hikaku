@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
+
+	"github.com/k0kubun/pp/v3"
 )
 
 /// TODO: i need a way to store the mapping and the composite mapping of the structs
@@ -26,6 +29,9 @@ func Analyze[T any](data *T) {
 // to process it over and over
 // Deep difference to block of differences
 func DeepDifference[T any](ctx context.Context, a *T, b *T, opts ...optsConfig) error {
+	now := time.Now()
+	var err error
+	var attrs *AttributeMap
 	// maybe for the first time, it will have to add a context
 	ctx = checkInitContext(ctx)
 
@@ -42,8 +48,8 @@ func DeepDifference[T any](ctx context.Context, a *T, b *T, opts ...optsConfig) 
 
 	// traverse the whole structs to create functions that will be processed later on
 	// those two functions are starters of the worker that process the buffers
-	switchValue(ctx, valueA)
-	switchValue(ctx, valueB)
+	switchValue(ctx, valueA, fromPath("."))
+	switchValue(ctx, valueB, fromPath("."))
 
 	fmt.Println("finished traversing")
 
@@ -81,15 +87,21 @@ func DeepDifference[T any](ctx context.Context, a *T, b *T, opts ...optsConfig) 
 		fmt.Println("closed")
 	}
 
-	fmt.Println("done")
+	if attrs, err = getAttributeMap(ctx); err != nil {
+		return err
+	}
+
+	pp.Println(attrs)
+
+	fmt.Println("done", time.Since(now).Microseconds())
 
 	return nil
 }
 
 // main switch
 func switchValue(ctx context.Context, value reflect.Value, opts ...optsValueOptions) error {
-	valueOpts := applyValueOptions(newValueOptions())
-	fmt.Println(value.Kind())
+	valueOpts := applyValueOptions(newValueOptions(), opts...)
+	fmt.Printf("kind=%v path=%v \n", value.Kind(), valueOpts.path)
 	// depending on the type
 	switch value.Kind() {
 	// we need to loop through all structfields
@@ -112,6 +124,7 @@ func switchValue(ctx context.Context, value reflect.Value, opts ...optsValueOpti
 			ctx,
 			value.Elem(),
 			fromPointer(), // don't need to have a if condition with that arch
+			fromPath(valueOpts.path),
 		)
 	case reflect.Uint:
 	case reflect.Uint8:

@@ -27,6 +27,8 @@ func WithTag(tagName string) optsConfig {
 
 type valueOptions struct {
 	isPointer bool
+	parent    PathIdentifier
+	path      string
 }
 
 func newValueOptions() *valueOptions {
@@ -38,6 +40,18 @@ type optsValueOptions func(c *valueOptions)
 func fromPointer() optsValueOptions {
 	return func(c *valueOptions) {
 		c.isPointer = true
+	}
+}
+
+func fromParent(path PathIdentifier) optsValueOptions {
+	return func(c *valueOptions) {
+		c.parent = path
+	}
+}
+
+func fromPath(path string) optsValueOptions {
+	return func(c *valueOptions) {
+		c.path = path
 	}
 }
 

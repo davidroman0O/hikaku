@@ -6,14 +6,24 @@ import (
 )
 
 type Basic struct {
-	Hello string
+	Hello     string
+	Something string
+	Else      string
+	Property  string
 }
 
+// go test -v -count=1 -timeout 5s -run ^TestBasic$
 func TestBasic(t *testing.T) {
 	err := DeepDifference[Basic](context.Background(), &Basic{
-		Hello: "test",
+		Hello:     "test",
+		Something: "something",
+		Else:      "else",
+		Property:  "property",
 	}, &Basic{
-		Hello: "ohoh",
+		Hello:     "ohoh",
+		Something: "fasdfasdas",
+		Else:      "fgfhgjgf",
+		Property:  "xcxcx",
 	})
 	if err != nil {
 		t.Error(err)
