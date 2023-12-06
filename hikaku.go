@@ -101,7 +101,7 @@ func DeepDifference[T any](ctx context.Context, a *T, b *T, opts ...optsConfig) 
 // main switch
 func switchValue(ctx context.Context, value reflect.Value, opts ...optsValueOptions) error {
 	valueOpts := applyValueOptions(newValueOptions(), opts...)
-	fmt.Printf("kind=%v path=%v \n", value.Kind(), valueOpts.path)
+	fmt.Printf("kind=%v path=%v \n", value.Kind(), newPath(valueOpts.parent, value))
 	// depending on the type
 	switch value.Kind() {
 	// we need to loop through all structfields

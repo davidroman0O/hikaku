@@ -121,6 +121,8 @@ func handleStruct(ctx context.Context, value reflect.Value, opts *valueOptions) 
 
 	thisStruct := attrs.Add(opts.parent, value)
 
+	fmt.Println(*thisStruct, thisStruct.Name, thisStruct.ParentPath, thisStruct.Path, thisStruct.Tag)
+
 	for idx := 0; idx < value.NumField(); idx++ {
 
 		fieldValue := value.Field(idx)

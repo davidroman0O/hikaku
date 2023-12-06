@@ -86,30 +86,9 @@ func (m *AttributeMap) Add(path PathIdentifier, value reflect.Value, opts ...opt
 
 func newPath(parent PathIdentifier, value reflect.Value) PathIdentifier {
 	switch value.Kind() {
-	// we need to loop through all structfields
-	case reflect.Struct:
-	case reflect.Float32:
-	case reflect.Float64:
-	case reflect.Int:
-	case reflect.Int8:
-	case reflect.Int16:
-	case reflect.Int32:
-	case reflect.Int64:
-	case reflect.Uint:
-	case reflect.Uint8:
-	case reflect.Uint16:
-	case reflect.Uint32:
-	case reflect.Uint64:
-	case reflect.Bool:
-	case reflect.String:
-	case reflect.Complex64:
-	case reflect.Uintptr:
-	case reflect.Complex128:
-	case reflect.Interface:
-	case reflect.UnsafePointer:
+	case reflect.Struct, reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Bool, reflect.String, reflect.Complex64, reflect.Uintptr, reflect.Complex128, reflect.Interface, reflect.UnsafePointer:
 		return PathIdentifier(fmt.Sprintf("%v.%v", parent, value.Type().Name()))
-	case reflect.Slice:
-	case reflect.Array:
+	case reflect.Slice, reflect.Array:
 		return PathIdentifier(fmt.Sprintf("%v.[%v]", parent, value.Type().Name()))
 	case reflect.Func:
 		return PathIdentifier(fmt.Sprintf("%v.(%v)", parent, value.Type().Name()))
@@ -122,5 +101,4 @@ func newPath(parent PathIdentifier, value reflect.Value) PathIdentifier {
 	default:
 		return PathIdentifier(fmt.Sprintf("%v.?(%v)", parent, value.Type().Name()))
 	}
-	return ""
 }
