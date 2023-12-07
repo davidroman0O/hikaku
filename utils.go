@@ -104,11 +104,61 @@ func setAttributeMap(ctx context.Context, exe *AttributeMap) context.Context {
 }
 
 // Receive a value of kind struct
-func handleStruct(ctx context.Context, value reflect.Value, opts *valueOptions) error {
+// so far handling struct properly
+func handleStruct(
+	ctx context.Context,
+	value reflect.Value,
+	opts *valueOptions,
+) error {
 	var exe *executionBuffer
-	var attrs *AttributeMap
-
 	var err error
+	if exe, err = getExecutionBuffer(ctx); err != nil {
+		fmt.Println("can't get execution buffer")
+		return err
+	}
+
+	thisType := value.Type()
+
+	fmt.Println("struct ", thisType.Name())
+
+	for idx := 0; idx < value.NumField(); idx++ {
+
+		fieldValue := value.Field(idx)
+		fieldType := thisType.Field(idx)
+
+		varName := value.Type().Field(idx).Name
+		varType := value.Type().Field(idx).Type.Kind()
+		varValue := value.Field(idx).Interface()
+
+		localIdx := idx
+		exe.Add(func() error {
+			// TODO @droman: here we do not increment the path of the parent and have no notion of real parenting, which override the same existing paths
+			fmt.Println("handle struct field:", varName, varType, varValue, localIdx)
+			return switchValue(
+				ctx,
+				fieldValue,
+				fromFieldName(varName),
+				fromParentPath(opts.parent),
+				fromTag(fieldType.Tag),
+				fromFieldIndex(localIdx),
+				fromParentType(fieldType.Type),
+				fromTypeInfo(varType.String()),
+			)
+		})
+	}
+
+	return nil
+}
+
+// so far handling strings properly
+func handleString(
+	ctx context.Context,
+	value reflect.Value,
+	opts *valueOptions,
+) error {
+	var exe *executionBuffer
+	var err error
+	var attrs *AttributeMap
 	if exe, err = getExecutionBuffer(ctx); err != nil {
 		fmt.Println("can't get execution buffer")
 		return err
@@ -119,46 +169,21 @@ func handleStruct(ctx context.Context, value reflect.Value, opts *valueOptions) 
 		return err
 	}
 
-	thisStruct := attrs.Add(opts.parent, value)
-
-	fmt.Println(*thisStruct, thisStruct.Name, thisStruct.ParentPath, thisStruct.Path, thisStruct.Tag)
-
-	for idx := 0; idx < value.NumField(); idx++ {
-
-		fieldValue := value.Field(idx)
-
-		// if varType != reflect.Slice && varType != reflect.Struct {
-		// 	// valueCompose[varName] = varValue
-		// }
-
-		varName := value.Type().Field(idx).Name
-		varType := value.Type().Field(idx).Type.Kind()
-		varValue := value.Field(idx).Interface()
-		fmt.Println("properties")
-
-		exe.Add(func() error {
-			fmt.Println(varName, varType, varValue)
-			// return switchValue(ctx, fieldValue, fromParent(fmt.Sprintf("%v.%v.%v", opts.path, value.Type().Name(), varName)))
-			return switchValue(ctx, fieldValue, fromParent(thisStruct.Path))
-		})
-		// hashStructNames[varName] = strings.Split(valueVal.Type().Field(idx).Tag.Get("json"), ",")[0]
-	}
-
-	// ctx = setExecutionBuffer(ctx, exe)
-
-	return nil
-}
-
-func handleString(ctx context.Context, value reflect.Value, opts *valueOptions) error {
-	var exe *executionBuffer
-	var err error
-	if exe, err = getExecutionBuffer(ctx); err != nil {
-		fmt.Println("can't get execution buffer")
-		return err
-	}
-
 	exe.Add(func() error {
-		fmt.Println("add that string", value.Type().Name(), value.Interface())
+		fmt.Println(opts.fieldIndex)
+		fmt.Println("handle string: ", opts.fieldName, value.Interface(), opts.fieldIndex)
+		attrOpts := []optsAttributeData{
+			optAttrParent(opts.parent),
+			optName(opts.fieldName),
+			optTypeInfo(opts.typeInfo),
+		}
+		// TODO @droman: use options pattern for that one or accumulate them all?!
+		if opts.tag.Get("json") != "" {
+			attrOpts = append(attrOpts, withTag(
+				opts.tag.Get("json"),
+			))
+		}
+		attrs.Add(opts.parent, value, attrOpts...)
 		return nil
 	})
 

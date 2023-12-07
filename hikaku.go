@@ -30,12 +30,10 @@ func Analyze[T any](data *T) {
 // Deep difference to block of differences
 func DeepDifference[T any](ctx context.Context, a *T, b *T, opts ...optsConfig) error {
 	now := time.Now()
-	var err error
-	var attrs *AttributeMap
-	// maybe for the first time, it will have to add a context
-	ctx = checkInitContext(ctx)
 
-	// cfg := applyOpts(newConfig(), opts)
+	var err error
+	var attrsA *AttributeMap
+	var attrsB *AttributeMap
 
 	valueA := convertPtrToValue[T](a)
 	valueB := convertPtrToValue[T](b)
@@ -44,64 +42,57 @@ func DeepDifference[T any](ctx context.Context, a *T, b *T, opts ...optsConfig) 
 		return ErrValuesInvalid
 	}
 
-	sig := make(chan error)
+	sigA := make(chan error)
+	sigB := make(chan error)
+
+	ctxA := checkInitContext(context.TODO())
+	ctxB := checkInitContext(context.TODO())
 
 	// traverse the whole structs to create functions that will be processed later on
 	// those two functions are starters of the worker that process the buffers
-	switchValue(ctx, valueA, fromPath("."))
-	switchValue(ctx, valueB, fromPath("."))
+	switchValue(ctxA, valueA, fromParentPath("."))
+	switchValue(ctxB, valueB, fromParentPath("."))
 
 	fmt.Println("finished traversing")
 
 	// worker that process the execution and each function will go through the switchValues again
 	// it will continously accumulate functions to process to enhance the main mapping
-	go func(s chan error, c context.Context) {
-		var exe *executionBuffer
-		var err error
-		if exe, err = getExecutionBuffer(c); err != nil {
-			s <- err
-			close(s)
-			return
-		}
-		finished := false
-		for !finished {
-			fn := exe.Pop()
-			if err = fn(); err != nil {
-				s <- err
-				return
-			}
-			// put an end to it
-			if exe.Len() == 0 {
-				finished = true
-			}
-		}
-		close(s)
-	}(sig, ctx)
+	go processBuffer(sigA, ctxA)
+	go processBuffer(sigB, ctxB)
 
-	for e := range sig {
-		fmt.Println("error", e)
-	}
-
-	select {
-	case <-sig:
-		fmt.Println("closed")
-	}
-
-	if attrs, err = getAttributeMap(ctx); err != nil {
+	// dequeue the execution buffer
+	if err = deepDifferenceWait(sigA, sigB); err != nil {
 		return err
 	}
 
-	pp.Println(attrs)
+	// then we just need to get the maps
+
+	if attrsA, err = getAttributeMap(ctxA); err != nil {
+		return err
+	}
+
+	if attrsB, err = getAttributeMap(ctxB); err != nil {
+		return err
+	}
+
+	// TODO @droman: then just need to compare each level of both attrsA/B
+
+	pp.Println(attrsA, attrsB)
 
 	fmt.Println("done", time.Since(now).Microseconds())
 
 	return nil
 }
 
-// main switch
-func switchValue(ctx context.Context, value reflect.Value, opts ...optsValueOptions) error {
+// `switchValue` is the core switch of the recursive stack
+// we do only one pass on the root struct and then we dequeue a constant buffer of function that will be added by other functions to avoid overflowing the stack
+// TODO @droman: what's the perfs though?
+func switchValue(
+	ctx context.Context,
+	value reflect.Value,
+	opts ...optsValueOptions,
+) error {
 	valueOpts := applyValueOptions(newValueOptions(), opts...)
-	fmt.Printf("kind=%v path=%v \n", value.Kind(), newPath(valueOpts.parent, value))
 	// depending on the type
 	switch value.Kind() {
 	// we need to loop through all structfields
@@ -125,6 +116,7 @@ func switchValue(ctx context.Context, value reflect.Value, opts ...optsValueOpti
 			value.Elem(),
 			fromPointer(), // don't need to have a if condition with that arch
 			fromPath(valueOpts.path),
+			fromParentPath(valueOpts.parent),
 		)
 	case reflect.Uint:
 	case reflect.Uint8:

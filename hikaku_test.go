@@ -8,7 +8,14 @@ import (
 type Basic struct {
 	Hello     string
 	Something string
-	Else      string
+	Else      string `json:"else"`
+	Property  string
+}
+
+type BasicNested struct {
+	Something Basic
+	Hello     string
+	Else      string `json:"else"`
 	Property  string
 }
 
@@ -24,6 +31,34 @@ func TestBasic(t *testing.T) {
 		Something: "fasdfasdas",
 		Else:      "fgfhgjgf",
 		Property:  "xcxcx",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+// go test -v -count=1 -timeout 5s -run ^TestBasicNested$
+func TestBasicNested(t *testing.T) {
+	err := DeepDifference[BasicNested](context.Background(), &BasicNested{
+		Hello: "test",
+		Something: Basic{
+			Hello:     "ohoh",
+			Something: "fasdfasdas",
+			Else:      "fgfhgjgf",
+			Property:  "xcxcx",
+		},
+		Else:     "else",
+		Property: "property",
+	}, &BasicNested{
+		Hello: "ohoh",
+		Something: Basic{
+			Hello:     "ohoh",
+			Something: "fasdfasdas",
+			Else:      "ddd",
+			Property:  "ggg",
+		},
+		Else:     "fgfhgjgf",
+		Property: "xcxcx",
 	})
 	if err != nil {
 		t.Error(err)
