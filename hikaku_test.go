@@ -1,13 +1,12 @@
 package hikaku
 
 import (
-	"context"
 	"testing"
 )
 
 type Basic struct {
 	Hello     string
-	Something string
+	Something *string
 	Else      string `json:"else"`
 	Property  string
 }
@@ -21,14 +20,16 @@ type BasicNested struct {
 
 // go test -v -count=1 -timeout 5s -run ^TestBasic$
 func TestBasic(t *testing.T) {
-	err := DeepDifference[Basic](context.Background(), &Basic{
+	somethingA := "something"
+	somethingB := "fasdfasdas"
+	err := DeepDifference[Basic](&Basic{
 		Hello:     "test",
-		Something: "something",
+		Something: &somethingA,
 		Else:      "else",
 		Property:  "property",
 	}, &Basic{
 		Hello:     "ohoh",
-		Something: "fasdfasdas",
+		Something: &somethingB,
 		Else:      "fgfhgjgf",
 		Property:  "xcxcx",
 	})
@@ -39,11 +40,13 @@ func TestBasic(t *testing.T) {
 
 // go test -v -count=1 -timeout 5s -run ^TestBasicNested$
 func TestBasicNested(t *testing.T) {
-	err := DeepDifference[BasicNested](context.Background(), &BasicNested{
+	somethingA := "something"
+	somethingB := "fasdfasdas"
+	err := DeepDifference[BasicNested](&BasicNested{
 		Hello: "test",
 		Something: Basic{
 			Hello:     "ohoh",
-			Something: "fasdfasdas",
+			Something: &somethingA,
 			Else:      "fgfhgjgf",
 			Property:  "xcxcx",
 		},
@@ -53,7 +56,7 @@ func TestBasicNested(t *testing.T) {
 		Hello: "ohoh",
 		Something: Basic{
 			Hello:     "ohoh",
-			Something: "fasdfasdas",
+			Something: &somethingB,
 			Else:      "ddd",
 			Property:  "ggg",
 		},

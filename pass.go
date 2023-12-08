@@ -66,58 +66,58 @@ func newAttributeMap() *AttributeMap {
 	return &AttributeMap{}
 }
 
-type optsAttributeData func(c *AttributeData)
+// type optsAttributeData func(c *AttributeData)
 
-func withTag(v string) optsAttributeData {
-	return func(c *AttributeData) {
-		c.Tag = v
-	}
-}
+// func withTag(v string) optsAttributeData {
+// 	return func(c *AttributeData) {
+// 		c.Tag = v
+// 	}
+// }
 
-func applyOptsAttr(c *AttributeData, opts ...optsAttributeData) *AttributeData {
-	for i := 0; i < len(opts); i++ {
-		opts[i](c)
-	}
-	return c
-}
+// func applyOptsAttr(c *AttributeData, opts ...optsAttributeData) *AttributeData {
+// 	for i := 0; i < len(opts); i++ {
+// 		opts[i](c)
+// 	}
+// 	return c
+// }
 
-func optPath(path PathIdentifier) optsAttributeData {
-	return func(c *AttributeData) {
-		c.Path = path
-	}
-}
+// func optPath(path PathIdentifier) optsAttributeData {
+// 	return func(c *AttributeData) {
+// 		c.Path = path
+// 	}
+// }
 
-func optTypeInfo(typeInfo string) optsAttributeData {
-	return func(c *AttributeData) {
-		c.TypeInfo = typeInfo
-	}
-}
+// func optTypeInfo(typeInfo string) optsAttributeData {
+// 	return func(c *AttributeData) {
+// 		c.TypeInfo = typeInfo
+// 	}
+// }
 
-func optAttrParent(parentPath PathIdentifier) optsAttributeData {
-	return func(c *AttributeData) {
-		c.ParentPath = parentPath
-	}
-}
+// func optAttrParent(parentPath PathIdentifier) optsAttributeData {
+// 	return func(c *AttributeData) {
+// 		c.ParentPath = parentPath
+// 	}
+// }
 
-func optTag(tag string) optsAttributeData {
-	return func(c *AttributeData) {
-		c.Tag = tag
-	}
-}
+// func optTag(tag string) optsAttributeData {
+// 	return func(c *AttributeData) {
+// 		c.Tag = tag
+// 	}
+// }
 
-func optName(name string) optsAttributeData {
-	return func(c *AttributeData) {
-		c.Name = name
-	}
-}
+// func optName(name string) optsAttributeData {
+// 	return func(c *AttributeData) {
+// 		c.Name = name
+// 	}
+// }
 
-func (m *AttributeMap) Add(parentPath PathIdentifier, value reflect.Value, opts ...optsAttributeData) *AttributeData {
-	// by default, type name, can be override by options
-	attr := *applyOptsAttr(newAttributeData(value.Type().Name()), opts...)
-	realPath := newPath(parentPath, value.Kind(), attr.Name)
-	(*m)[realPath] = attr
-	return &attr
-}
+// func (m *AttributeMap) Add(parentPath PathIdentifier, value reflect.Value, opts ...optsAttributeData) *AttributeData {
+// 	// by default, type name, can be override by options
+// 	attr := *applyOptsAttr(newAttributeData(value.Type().Name()), opts...)
+// 	realPath := newPath(parentPath, value.Kind(), attr.Name)
+// 	(*m)[realPath] = attr
+// 	return &attr
+// }
 
 // Generate a unique but comprehensible path pattern
 func newPath(parent PathIdentifier, kind reflect.Kind, value string) PathIdentifier {
