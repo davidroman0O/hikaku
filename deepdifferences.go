@@ -142,13 +142,14 @@ func switchValue(
 	case reflect.Int64:
 		break
 	case reflect.Pointer:
+		// same probe as before but as a pointer
+		// TODO @droman: I should support more complex types through other means of identification
+		// simply because something can create a pointer of a pointer of an array that contain pointers of a value
 		return switchValue(
 			ctx,
 			value.Elem(),
 			probeWithProbe(probeConfig), // need a function that pass the probe with just pointer
 			probeWithPointer(),          // don't need to have a if condition with that arch
-			probeWithPath(probeConfig.path),
-			probeWithParentPath(probeConfig.parent),
 		)
 	case reflect.Uint:
 	case reflect.Uint8:

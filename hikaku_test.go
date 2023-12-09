@@ -67,3 +67,37 @@ func TestBasicNested(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+type arrayPointer []*string
+type nestedPointer *arrayPointer
+type mainPointer *nestedPointer
+type dataPointers struct {
+	FindMe *mainPointer
+}
+
+// This test is the goal i which the probe system can support
+// go test -v -count=1 -timeout 5s -run ^TestBasicNestedPointers$
+func TestBasicNestedPointers(t *testing.T) {
+	var valueA string = "valueA"
+	var targetA arrayPointer = arrayPointer{
+		&valueA,
+	}
+	var nestedTargetA nestedPointer = &targetA
+	var valuePointerA mainPointer = &nestedTargetA
+
+	var valueB string = "valueA"
+	var targetB arrayPointer = arrayPointer{
+		&valueB,
+	}
+	var nestedTargetB nestedPointer = &targetB
+	var valuePointerB mainPointer = &nestedTargetB
+
+	err := DeepDifference[dataPointers](&dataPointers{
+		FindMe: &valuePointerA,
+	}, &dataPointers{
+		FindMe: &valuePointerB,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+}
