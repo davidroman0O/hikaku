@@ -24,7 +24,7 @@ func TestSwitchStruct(t *testing.T) {
 	}
 
 	for i := 0; i < len(testCases); i++ {
-		err := switchValue(nil, reflect.ValueOf(testCases[i].Value))
+		err := probeValue(nil, reflect.ValueOf(testCases[i].Value))
 		if err != testCases[i].Expect {
 			t.Error("switch value doesn't give the correct error ", err, testCases[i].Expect)
 		}

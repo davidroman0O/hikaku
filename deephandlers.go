@@ -61,7 +61,7 @@ func handleStruct(
 			// TODO @droman: here we do not increment the path of the parent and have no notion of real parenting, which override the same existing paths
 			fmt.Println("handle struct field:", varName, varType, varValue, localIdx, probe.parentPath)
 
-			return switchValue(
+			return probeValue(
 				ctx,
 				fieldValue,
 				probeWithParentProbe(currentProbe),
@@ -99,27 +99,67 @@ func handleString(
 		return err
 	}
 
-	// var attrs *AttributeMap
-	// if attrs, err = getAttributeMap(ctx); err != nil {
-	// 	fmt.Println("can't get attrs map")
-	// 	return err
-	// }
-
 	exe.Add(func() error {
 		fmt.Println(probe.fieldIndex)
 		fmt.Println("handle string: ", probe.fieldName, value.Interface(), probe.fieldIndex)
-		// attrOpts := []optsAttributeData{
-		// 	optAttrParent(probe.parent),
-		// 	optName(probe.fieldName),
-		// 	optTypeInfo(probe.typeInfo),
-		// }
-		// // TODO @droman: use options pattern for that one or accumulate them all?!
-		// if probe.tag.Get("json") != "" {
-		// 	attrOpts = append(attrOpts, withTag(
-		// 		probe.tag.Get("json"),
-		// 	))
-		// }
-		// attrs.Add(probe.parent, value, attrOpts...)
+
+		var realValue interface{}
+		if probe.value.Kind() == reflect.Pointer {
+			realValue = probe.value.Elem().Interface()
+		} else {
+			realValue = probe.value.Interface()
+		}
+
+		opts := []optionProbe{
+			probeWithParentProbe(probe.parent),
+			probeWithParentPath(probe.parentPath),
+			probeWithData(realValue),
+			probeWithTypeName(value.Type().Name()),
+			probeWithFieldName(probe.fieldName),
+			probeWithTag(probe.tag),
+			probeWithLevel(probe.level + 1),
+			probeWithParentType(probe.parentType),
+			probeWithKind(value.Kind()),
+		}
+
+		if probe.isPointer {
+			// only the parent will tell me if it's a pointer
+			opts = append(opts, probeWithPointer())
+		}
+
+		mapProbe.Add(
+			applyProbeOptions(
+				newProbe(),
+				opts...,
+			),
+		)
+		return nil
+	})
+
+	return nil
+}
+
+func handleIntInt8Int16Int32Int64(
+	ctx context.Context,
+	value reflect.Value,
+	probe *Probe,
+) error {
+	var exe *executionBuffer
+	var err error
+	if exe, err = getExecutionBuffer(ctx); err != nil {
+		fmt.Println("can't get execution buffer")
+		return err
+	}
+
+	var mapProbe *ProbeMap
+	if mapProbe, err = getProbeMap(ctx); err != nil {
+		fmt.Println("can't get probe map")
+		return err
+	}
+
+	exe.Add(func() error {
+		fmt.Println(probe.fieldIndex)
+		fmt.Println("handle int: ", probe.fieldName, value.Interface(), probe.fieldIndex)
 
 		var realValue interface{}
 		if probe.value.Kind() == reflect.Pointer {

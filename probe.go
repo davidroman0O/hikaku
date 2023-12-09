@@ -152,7 +152,7 @@ func computePath(c *Probe) PathIdentifier {
 	fmt.Printf("computePath fieldName=%v parentPath=%v \n", c.fieldName, c.parentPath)
 
 	switch c.kind {
-	case reflect.String:
+	case reflect.String, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		switch c.level {
 		case 1:
 			return PathIdentifier(fmt.Sprintf(".%v", c.fieldName))

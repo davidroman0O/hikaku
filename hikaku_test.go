@@ -8,14 +8,14 @@ type Basic struct {
 	Hello     string
 	Something *string
 	Else      string `json:"else"`
-	Property  string
+	Property  int
 }
 
 type BasicNested struct {
 	Something Basic
 	Hello     string
 	Else      string `json:"else"`
-	Property  string
+	Property  int
 }
 
 // go test -v -count=1 -timeout 5s -run ^TestBasic$
@@ -26,12 +26,12 @@ func TestBasic(t *testing.T) {
 		Hello:     "test",
 		Something: &somethingA,
 		Else:      "else",
-		Property:  "property",
+		Property:  12,
 	}, &Basic{
 		Hello:     "ohoh",
 		Something: &somethingB,
 		Else:      "fgfhgjgf",
-		Property:  "xcxcx",
+		Property:  17,
 	})
 	if err != nil {
 		t.Error(err)
@@ -48,20 +48,20 @@ func TestBasicNested(t *testing.T) {
 			Hello:     "ohoh",
 			Something: &somethingA,
 			Else:      "fgfhgjgf",
-			Property:  "xcxcx",
+			Property:  12,
 		},
 		Else:     "else",
-		Property: "property",
+		Property: 14,
 	}, &BasicNested{
 		Hello: "ohoh",
 		Something: Basic{
 			Hello:     "ohoh",
 			Something: &somethingB,
 			Else:      "ddd",
-			Property:  "ggg",
+			Property:  12,
 		},
 		Else:     "fgfhgjgf",
-		Property: "xcxcx",
+		Property: 15,
 	})
 	if err != nil {
 		t.Error(err)

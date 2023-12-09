@@ -68,7 +68,7 @@ func DeepDifference[T any](
 
 	// traverse the whole structs to create functions that will be processed later on
 	// those two functions are starters of the worker that process the buffers
-	switchValue(
+	probeValue(
 		ctxA,
 		valueA,
 		probeWithKind(valueA.Kind()),
@@ -76,7 +76,7 @@ func DeepDifference[T any](
 		probeWithParentPath("."),
 		probeWithLevel(0),
 	)
-	switchValue(
+	probeValue(
 		ctxB,
 		valueB,
 		probeWithKind(valueB.Kind()),
@@ -116,11 +116,11 @@ func DeepDifference[T any](
 	return nil
 }
 
-// `switchValue` is the core switch of the recursive stack
-// we do only one pass on the root struct and then we dequeue a constant buffer of function that will be added by other functions to avoid overflowing the stack
+// `probeValue` is the core switch of the recursive stack, only the first root level will be on the stack then a dequeuing will need to happen to continue the exploration of the nested structures
+// We do only one pass on the root struct and then we dequeue a constant buffer of function that will be added by other functions to avoid overflowing the stack
 // TODO @droman: what's the perfs though?
 // context of ExecutionBuffer + ProbeMap are required
-func switchValue(
+func probeValue(
 	ctx context.Context,
 	value reflect.Value,
 	opts ...optionProbe,
@@ -137,17 +137,13 @@ func switchValue(
 	case reflect.Float32:
 	case reflect.Float64:
 		break
-	case reflect.Int:
-	case reflect.Int8:
-	case reflect.Int16:
-	case reflect.Int32:
-	case reflect.Int64:
-		break
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return handleIntInt8Int16Int32Int64(ctx, value, probeConfig)
 	case reflect.Pointer:
 		// same probe as before but as a pointer
 		// TODO @droman: I should support more complex types through other means of identification
 		// simply because something can create a pointer of a pointer of an array that contain pointers of a value
-		return switchValue(
+		return probeValue(
 			ctx,
 			value.Elem(),
 			probeWithProbe(probeConfig), // need a function that pass the probe with just pointer
