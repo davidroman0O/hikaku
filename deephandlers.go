@@ -20,9 +20,28 @@ func handleStruct(
 		return err
 	}
 
+	var mapProbe *ProbeMap
+	if mapProbe, err = getProbeMap(ctx); err != nil {
+		fmt.Println("can't get probe map")
+		return err
+	}
 	thisType := value.Type()
 
+	var currentProbe *Probe = probe
+
 	// TODO @droman: we should record probes at every level, including 0
+	if probe.level == 0 {
+		// I am root
+		rootProbe := applyProbeOptions(
+			newProbe(),
+			probeWithKind(probe.kind),
+			probeWithTypeName(value.Type().Name()),
+			probeWithValue(value),
+		)
+		mapProbe.Add(rootProbe)
+		currentProbe = rootProbe
+		// return handleStruct(ctx, value, applyProbeOptions(rootProbe, probeWithLevel(1)))
+	}
 
 	fmt.Println("struct ", thisType.Name())
 
@@ -40,11 +59,12 @@ func handleStruct(
 
 		exe.Add(func() error {
 			// TODO @droman: here we do not increment the path of the parent and have no notion of real parenting, which override the same existing paths
-			fmt.Println("handle struct field:", varName, varType, varValue, localIdx)
+			fmt.Println("handle struct field:", varName, varType, varValue, localIdx, probe.parentPath)
 
 			return switchValue(
 				ctx,
 				fieldValue,
+				probeWithParentProbe(currentProbe),
 				probeWithValue(fieldValue),
 				probeWithLevel(probe.level),
 				probeWithFieldName(varName),
@@ -109,12 +129,13 @@ func handleString(
 		}
 
 		opts := []optionProbe{
+			probeWithParentProbe(probe.parent),
+			probeWithParentPath(probe.parentPath),
 			probeWithData(realValue),
 			probeWithTypeName(value.Type().Name()),
 			probeWithFieldName(probe.fieldName),
 			probeWithTag(probe.tag),
 			probeWithLevel(probe.level + 1),
-			probeWithParentPath(probe.path),
 			probeWithParentType(probe.parentType),
 			probeWithKind(value.Kind()),
 		}

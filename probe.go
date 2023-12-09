@@ -146,8 +146,10 @@ func applyProbeOptions(c *Probe, opts ...optionProbe) *Probe {
 
 func computePath(c *Probe) PathIdentifier {
 	if c.kind.String() == "" {
-		return "unknown"
+		return "."
 	}
+
+	fmt.Printf("computePath fieldName=%v parentPath=%v \n", c.fieldName, c.parentPath)
 
 	switch c.kind {
 	case reflect.String:
@@ -160,7 +162,7 @@ func computePath(c *Probe) PathIdentifier {
 	case reflect.Struct:
 		switch c.level {
 		case 0:
-			return PathIdentifier(fmt.Sprintf("%v", c.fieldName))
+			return PathIdentifier(fmt.Sprintf("."))
 		default:
 			return PathIdentifier(fmt.Sprintf("%v.%v", c.parentPath, c.fieldName))
 		}

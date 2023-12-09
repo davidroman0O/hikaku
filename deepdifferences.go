@@ -71,6 +71,7 @@ func DeepDifference[T any](
 	switchValue(
 		ctxA,
 		valueA,
+		probeWithKind(valueA.Kind()),
 		probeWithTypeName(valueA.Type().Name()),
 		probeWithParentPath("."),
 		probeWithLevel(0),
@@ -78,6 +79,7 @@ func DeepDifference[T any](
 	switchValue(
 		ctxB,
 		valueB,
+		probeWithKind(valueB.Kind()),
 		probeWithTypeName(valueB.Type().Name()),
 		probeWithParentPath("."),
 		probeWithLevel(0),
