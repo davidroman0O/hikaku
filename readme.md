@@ -1,6 +1,10 @@
-1h every evening... we will how it goes 
+1h every evening... sometimes during the weekend... we will see how it goes 
 
-`hikaku` is a toolbox for types that intent to enhance your knowledge of the types at runtime
+
+`hikaku` will be a toolbox for types at runtime that intent to enhance your knowledge of your data at runtime.
+
+It will be useful for `junjo` that i put in pause for not until i got `hikaku` working with all the tools i need. 
+
 
 # todos and ideas
 

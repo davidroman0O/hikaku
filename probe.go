@@ -20,10 +20,16 @@ func (p *ProbeMap) Add(probe *Probe) {
 
 // `Probe` represent the instance of a data at a specific path at a specific level of a type and extract it's info
 // It is accumulating information at runtime which can be costly when doing deep difference of nested structures
+// One `Probe` is supposed to be part of a tree of values by knowing it's parent
+// TODO @droman: what about imported types?
+// TODO @droman: what about non-imported types?
 type Probe struct {
 	level      int
 	path       PathIdentifier
-	parent     PathIdentifier
+	parentPath PathIdentifier
+	// A parent `Probe` will allow us to know all the kind of different types of a datastructure.
+	// Which is useful for complex and unusual types.
+	parent     *Probe
 	isPointer  bool
 	kind       reflect.Kind
 	tag        reflect.StructTag
@@ -46,6 +52,12 @@ type optionProbe func(c *Probe)
 func probeWithProbe(probe *Probe) optionProbe {
 	return func(c *Probe) {
 		(*c) = *probe
+	}
+}
+
+func probeWithParentProbe(probe *Probe) optionProbe {
+	return func(c *Probe) {
+		c.parent = probe
 	}
 }
 
@@ -87,7 +99,7 @@ func probeWithKind(kind reflect.Kind) optionProbe {
 
 func probeWithParentPath(path PathIdentifier) optionProbe {
 	return func(c *Probe) {
-		c.parent = path
+		c.parentPath = path
 	}
 }
 
@@ -143,14 +155,14 @@ func computePath(c *Probe) PathIdentifier {
 		case 1:
 			return PathIdentifier(fmt.Sprintf(".%v", c.fieldName))
 		default:
-			return PathIdentifier(fmt.Sprintf("%v.%v", c.parent, c.fieldName))
+			return PathIdentifier(fmt.Sprintf("%v.%v", c.parentPath, c.fieldName))
 		}
 	case reflect.Struct:
 		switch c.level {
 		case 0:
 			return PathIdentifier(fmt.Sprintf("%v", c.fieldName))
 		default:
-			return PathIdentifier(fmt.Sprintf("%v.%v", c.parent, c.fieldName))
+			return PathIdentifier(fmt.Sprintf("%v.%v", c.parentPath, c.fieldName))
 		}
 
 	}

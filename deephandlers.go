@@ -48,7 +48,7 @@ func handleStruct(
 				probeWithValue(fieldValue),
 				probeWithLevel(probe.level),
 				probeWithFieldName(varName),
-				probeWithParentPath(probe.parent),
+				probeWithParentPath(probe.parentPath),
 				probeWithTag(fieldType.Tag),
 				probeWithFieldIndex(localIdx),
 				probeWithParentType(fieldType.Type),
