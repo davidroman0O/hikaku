@@ -33,15 +33,19 @@ func handleStruct(
 
 		varName := value.Type().Field(idx).Name
 		varType := value.Type().Field(idx).Type.Kind()
+
 		varValue := value.Field(idx).Interface()
 
 		localIdx := idx
+
 		exe.Add(func() error {
 			// TODO @droman: here we do not increment the path of the parent and have no notion of real parenting, which override the same existing paths
 			fmt.Println("handle struct field:", varName, varType, varValue, localIdx)
+
 			return switchValue(
 				ctx,
 				fieldValue,
+				probeWithValue(fieldValue),
 				probeWithLevel(probe.level),
 				probeWithFieldName(varName),
 				probeWithParentPath(probe.parent),
@@ -97,7 +101,16 @@ func handleString(
 		// }
 		// attrs.Add(probe.parent, value, attrOpts...)
 
+		var realValue interface{}
+		if probe.value.Kind() == reflect.Pointer {
+			realValue = probe.value.Elem().Interface()
+		} else {
+			realValue = probe.value.Interface()
+		}
+
 		opts := []optionProbe{
+			probeWithData(realValue),
+			probeWithTypeName(value.Type().Name()),
 			probeWithFieldName(probe.fieldName),
 			probeWithTag(probe.tag),
 			probeWithLevel(probe.level + 1),

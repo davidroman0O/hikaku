@@ -145,7 +145,8 @@ func switchValue(
 		return switchValue(
 			ctx,
 			value.Elem(),
-			probeWithPointer(), // don't need to have a if condition with that arch
+			probeWithProbe(probeConfig), // need a function that pass the probe with just pointer
+			probeWithPointer(),          // don't need to have a if condition with that arch
 			probeWithPath(probeConfig.path),
 			probeWithParentPath(probeConfig.parent),
 		)

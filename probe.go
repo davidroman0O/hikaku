@@ -3,8 +3,6 @@ package hikaku
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/k0kubun/pp/v3"
 )
 
 // `ProbeMap` contains a flat map of all properties which has been identified recurssively with `Probe` data
@@ -30,6 +28,8 @@ type Probe struct {
 	kind       reflect.Kind
 	tag        reflect.StructTag
 	parentType reflect.Type
+	value      reflect.Value
+	data       interface{}
 	fieldIndex int
 	fieldName  string
 	typeName   string
@@ -43,9 +43,27 @@ func newProbe() *Probe {
 
 type optionProbe func(c *Probe)
 
+func probeWithProbe(probe *Probe) optionProbe {
+	return func(c *Probe) {
+		(*c) = *probe
+	}
+}
+
 func probeWithPointer() optionProbe {
 	return func(c *Probe) {
 		c.isPointer = true
+	}
+}
+
+func probeWithData(data interface{}) optionProbe {
+	return func(c *Probe) {
+		c.data = data
+	}
+}
+
+func probeWithValue(value reflect.Value) optionProbe {
+	return func(c *Probe) {
+		c.value = value
 	}
 }
 
@@ -110,7 +128,7 @@ func applyProbeOptions(c *Probe, opts ...optionProbe) *Probe {
 	// after apply every options we should compute the path
 	c.path = computePath(c)
 
-	pp.Println(c)
+	// pp.Println(c)
 	return c
 }
 
