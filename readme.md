@@ -1,5 +1,4 @@
-1h every evening... sometimes during the weekend... we will see how it goes 
-
+wip
 
 `hikaku` will be a toolbox for types at runtime that intent to enhance your knowledge of your data at runtime.
 
